@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ENGLISH COMPOSITION ONLINE TEST</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            font-size: 30px;
+            color: black;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 24px;
+            color: white;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .question-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            gap: 15px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .question-buttons button {
+            padding: 12px;
+            border: 2px solid #ccc;
+            background: linear-gradient(to bottom, #fff, #e0e0e0);
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 8px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .question-buttons button:hover {
+            background: linear-gradient(to bottom, #f9bc00, #f18e00); /* Highlight hover */
+            transform: translateY(-2px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .question-buttons button:active {
+            transform: translateY(1px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+        
+        .logout-button {
+            margin-top: 40px;
+            background: red;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .logout-button:hover {
+            background: #f95151;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Personalized Welcome Message -->
+<h1>ENGLISH COMPOSITION ONLINE TEST</h1>
+<h2 id="welcomeHeader">WELCOME USER</h2>
+
+<div class="question-buttons" id="questionButtons"></div>
+
+<button class="logout-button" onclick="logout()">Logout</button>
+
+<script>
+    // Check login status
+    if (!localStorage.getItem('loggedIn')) {
+        alert('You must log in first!');
+        window.location.href = 'index.html';
+    }
+
+    // Get username from localStorage
+    const username = localStorage.getItem('username');
+    document.getElementById('welcomeHeader').textContent = `WELCOME ${username}`;
+
+    // Generate Q1 to Q30 buttons with default "unfinished"
+    const container = document.getElementById('questionButtons');
+
+    // Simulate answered and flagged questions (you can customize this)
+    const answeredQuestions = [2, 5, 7, 12];     // Example answered
+    const flaggedQuestions = [4, 9, 15];         // Example flagged
+
+    for (let i = 1; i <= 30; i++) {
+        const btn = document.createElement('button');
+        btn.textContent = 'Q' + i;
+
+        if (answeredQuestions.includes(i)) {
+            btn.classList.add('answered');
+        } else if (flaggedQuestions.includes(i)) {
+            btn.classList.add('flagged');
+        } else {
+            btn.classList.add('unfinished');
+        }
+
+        btn.onclick = () => {
+            // Redirect to corresponding question page
+            window.location.href = `Question${i}.html`;
+        };
+
+        container.appendChild(btn);
+    }
+
+    function logout() {
+        localStorage.removeItem('loggedIn');
+        localStorage.removeItem('username');
+        window.location.href = 'index.html';
+    }
+</script>
+
+</body>
+</html>

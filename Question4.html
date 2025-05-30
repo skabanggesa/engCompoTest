@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Q1 - Composition</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
+    .exam-container {
+      background: #fff;
+      padding: 25px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    img {
+      max-width: 100%;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+    .question {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      color: #2c3e50;
+    }
+    .word-count {
+      font-size: 14px;
+      color: #7f8c8d;
+      margin-bottom: 10px;
+    }
+    textarea {
+      width: 100%;
+      height: 200px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      resize: vertical;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s;
+      margin-right: 10px;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+    .btn-back {
+      background-color: #2ecc71;
+    }
+    .btn-back:hover {
+      background-color: #27ae60;
+    }
+    .btn-logout {
+      background-color: #e74c3c;
+    }
+    .btn-logout:hover {
+      background-color: #c0392b;
+    }
+    .btn-try {
+      background-color: #f39c12;
+    }
+    .btn-try:hover {
+      background-color: #d35400;
+    }
+    .btn-whatsapp {
+      background-color: #2ecc71;
+    }
+    .btn-whatsapp:hover {
+      background-color: #27ae60;
+    }
+    .result-container {
+      margin-top: 20px;
+      display: none;
+      border-top: 1px solid #ccc;
+      padding-top: 15px;
+    }
+    .criteria {
+      margin-top: 10px;
+    }
+    .criteria-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+    .result.passed {
+      color: green;
+      font-weight: bold;
+    }
+    .result.failed {
+      color: red;
+      font-weight: bold;
+    }
+    .warning {
+      color: #e67e22;
+      font-weight: bold;
+      background-color: #fef9e7;
+      border-left: 4px solid #f39c12;
+      padding: 10px;
+      margin-top: 10px;
+      display: none;
+    }
+    .feedback {
+      background-color: #f8f9fa;
+      border-left: 4px solid #3498db;
+      padding: 10px;
+      margin-top: 15px;
+    }
+    .score {
+      font-size: 22px;
+      margin-top: 10px;
+    }
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .system-comment {
+      margin-top: 10px;
+      font-style: italic;
+      color: #555;
+    }
+    .punctuation-error {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+<h1>ENGLISH COMPOSITION ONLINE TEST - QUESTION 4</h1>
+<div class="exam-container">
+  <img src="https://i.postimg.cc/FKp0T6VH/camping.png"  alt="Camping">
+  <div class="question">
+    Use the words given to write your answer in 70 - 80 words.
+  </div>
+  <div class="word-count">Word count: <span id="count">0</span>/110</div>
+  <textarea id="response" placeholder="Write your composition here..."></textarea>
+  <div class="button-group">
+    <button id="submitBtn">Submit</button>
+    <button class="btn-back" onclick="window.location.href='test.html'">Back</button>
+    <button class="btn-logout" onclick="confirmLogout()">Logout</button>
+    <button class="btn-try" onclick="tryAgain()">Try Again</button>
+    <button class="btn-whatsapp" onclick="sendToWhatsApp()">Send Result</button>
+  </div>
+  <div class="result-container" id="resultContainer">
+    <div class="feedback">
+      Your answer was checked based on:
+      <div class="criteria">
+        <div class="criteria-item"><span>Word Count:</span><span id="lengthResult" class="result failed"></span></div>
+        <div class="criteria-item"><span>Punctuation:</span><span id="punctuationResult" class="result failed"></span></div>
+        <div class="criteria-item"><span>Grammar and Sentence Structure:</span><span id="grammarResult" class="result failed"></span></div>
+      </div>
+      <div class="score">Total Marks: <span id="scoreDisplay">0</100</div>
+      <div class="system-comment" id="systemComment"></div>
+    </div>
+  </div>
+  <div class="warning" id="wordWarning">Try to stay within 80 words for maximum credit.</div>
+  <div class="warning" id="punctuationWarning">Remember to use proper punctuation (.!?) at the end of sentences.</div>
+</div>
+
+<script src="https://languagetool.org/api/v2/check"></script>
+<script>
+  // DOM Elements
+  const responseInput = document.getElementById("response");
+  const wordCountSpan = document.getElementById("count");
+  const resultContainer = document.getElementById("resultContainer");
+  const lengthResult = document.getElementById("lengthResult");
+  const punctuationResult = document.getElementById("punctuationResult");
+  const grammarResult = document.getElementById("grammarResult");
+  const scoreDisplay = document.getElementById("scoreDisplay");
+  const systemComment = document.getElementById("systemComment");
+  const wordWarning = document.getElementById("wordWarning");
+  const punctuationWarning = document.getElementById("punctuationWarning");
+  const submitBtn = document.getElementById("submitBtn");
+
+  let finalScore = 0;
+
+  // Word count function
+  function countWords() {
+    const text = responseInput.value.trim();
+    const cleanedText = text.replace(/[^\w\s]/g, '').replace(/\s+/g, ' ');
+    const wordCount = cleanedText === "" ? 0 : cleanedText.split(' ').length;
+    wordCountSpan.textContent = wordCount;
+
+    if (wordCount > 110) {
+      wordWarning.style.display = "block";
+    } else if (wordCount > 80 && wordCount <= 110) {
+      wordWarning.style.display = "block";
+    } else {
+      wordWarning.style.display = "none";
+    }
+  }
+
+  // Punctuation check
+  function checkPunctuation(text) {
+    if (!text.trim()) return false;
+    const endsWithPunctuation = /[.!?]$/.test(text);
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    let allCapitalized = true;
+    for (let i = 0; i < sentences.length; i++) {
+      const trimmed = sentences[i].trim();
+      if (trimmed.length > 0 && trimmed[0] !== trimmed[0].toUpperCase()) {
+        allCapitalized = false;
+        break;
+      }
+    }
+    return endsWithPunctuation && allCapitalized;
+  }
+
+  // LanguageTool API for grammar and structure check
+  function checkGrammarAndStructure(text) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', 'https://languagetool.org/api/v2/check', true);
+      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          const response = JSON.parse(xhr.responseText);
+          resolve(response);
+        } else if (xhr.readyState === 4) {
+          reject(new Error('Grammar and Sentence Structure check failed'));
+        }
+      };
+      xhr.onerror = function () {
+        reject(new Error('Network error'));
+      };
+      xhr.send(`language=en-US&text=${encodeURIComponent(text)}`);
+    });
+  }
+
+  // Submit function
+  async function submitAnswer() {
+    const userText = responseInput.value.trim();
+    let score = 0;
+
+    // Word count check (15 points)
+    const cleanedText = userText.replace(/[^\w\s]/g, '').replace(/\s+/g, ' ');
+    const wordCount = cleanedText === "" ? 0 : cleanedText.split(' ').length;
+    let wordScore = 0;
+    if (wordCount >= 70 && wordCount <= 80) {
+      wordScore = 15;
+      lengthResult.textContent = "Excellent range (15/15)";
+    } else if (wordCount >= 60 && wordCount < 70) {
+      wordScore = 12;
+      lengthResult.textContent = "Good range (12/15)";
+    } else if (wordCount >= 50 && wordCount < 60) {
+      wordScore = 9;
+      lengthResult.textContent = "Acceptable range (9/15)";
+    } else if (wordCount >= 40 && wordCount < 50) {
+      wordScore = 6;
+      lengthResult.textContent = "Below range (6/15)";
+    } else if (wordCount > 80 && wordCount <= 90) {
+      wordScore = 10;
+      lengthResult.textContent = "Slightly over (10/15)";
+    } else if (wordCount > 90 && wordCount <= 110) {
+      wordScore = 5;
+      lengthResult.textContent = "Over limit (5/15)";
+    } else {
+      wordScore = 0;
+      lengthResult.textContent = "Too short or too long (0/15)";
+    }
+    lengthResult.className = wordScore >= 9 ? "result passed" : "result failed";
+    score += wordScore;
+
+    // Punctuation check (15 points)
+    const punctuationValid = checkPunctuation(userText);
+    let punctuationScore = punctuationValid ? 15 : 5;
+    punctuationResult.textContent = punctuationValid ? "Excellent punctuation (15/15)" : "Some punctuation issues (5/15)";
+    punctuationResult.className = punctuationScore >= 9 ? "result passed" : "result failed";
+    punctuationWarning.style.display = punctuationValid ? "none" : "block";
+    score += punctuationScore;
+
+    // Grammar and Structure check (70 points)
+    try {
+      const response = await checkGrammarAndStructure(userText);
+      const errors = response.matches.length;
+      const totalScore = 70;
+      const grammarScore = Math.max(0, totalScore - (errors * 2));
+      grammarResult.textContent = `Grammar and Sentence Structure: ${grammarScore}/70`;
+      grammarResult.className = grammarScore >= 42 ? "result passed" : "result failed";
+      score += grammarScore;
+    } catch (error) {
+      grammarResult.textContent = "Grammar and Sentence Structure check failed";
+      grammarResult.className = "result failed";
+      score += 0; // No score for grammar and structure if check fails
+    }
+
+    finalScore = score;
+    scoreDisplay.textContent = `${score}/100`; // Display only the score out of 100
+
+    // Feedback message
+    if (score >= 90) {
+      systemComment.textContent = "Excellent work! Your writing is excellent across all criteria.";
+    } else if (score >= 75) {
+      systemComment.textContent = "Good job! Some minor improvements can make it outstanding.";
+    } else if (score >= 50) {
+      systemComment.textContent = "Fair attempt. Focus more on grammar and sentence structure.";
+    } else {
+      systemComment.textContent = "Needs improvement. Work on all aspects: word count, punctuation, grammar, and structure.";
+    }
+
+    resultContainer.style.display = "block";
+  }
+
+  function tryAgain() {
+    responseInput.value = "";
+    resultContainer.style.display = "none";
+    wordCountSpan.textContent = "0";
+    wordWarning.style.display = "none";
+    punctuationWarning.style.display = "none";
+  }
+
+  function sendToWhatsApp() {
+    const message = `📝 English Composition Result\n`;
+    const scoreMsg = `🎯 Total Marks: ${finalScore}/100\n`;
+    const wc = `🔢 Word Count: ${wordCountSpan.textContent}\n`;
+    const comment = `💬 Feedback: ${systemComment.textContent}`;
+    const fullMessage = encodeURIComponent(message + scoreMsg + wc + comment);
+    window.open(`https://wa.me/60106607787?text=${fullMessage}`, '_blank');
+  }
+
+  function confirmLogout() {
+    if (confirm("Are you sure you want to log out?")) {
+      window.location.href = "login.html";
+    }
+  }
+
+  // Event Listeners
+  responseInput.addEventListener("input", countWords);
+  submitBtn.addEventListener("click", submitAnswer);
+</script>
+</body>
+</html>

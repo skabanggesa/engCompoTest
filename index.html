@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ENGLISH COMPOSITION ONLINE TEST</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+        }
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            width: 320px;
+            box-shadow:
+                0 30px 40px rgba(0, 0, 0, 0.3),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+            transform-style: preserve-3d;
+            animation: floatBox 6s ease-in-out infinite;
+            position: relative;
+            transition: transform 0.3s ease;
+            text-align: center;
+        }
+        .login-container:hover {
+            transform: rotateY(2deg) rotateX(-2deg);
+        }
+        .login-container h1 {
+            font-size: 20px;
+            color: #2c3e50;
+            letter-spacing: 1px;
+            margin-bottom: 25px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 8px;
+            background: #ecf0f1;
+            font-size: 14px;
+            outline: none;
+            transition: background 0.3s;
+        }
+        .input-group input:focus {
+            background: #d0dfe6;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(to right, #2980b9, #3498db);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: linear-gradient(to right, #2573a6, #2980b9);
+        }
+        #error {
+            color: red;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+        @keyframes floatBox {
+            0%, 100% {
+                transform: translateY(0px) rotateY(0deg);
+            }
+            50% {
+                transform: translateY(-10px) rotateY(1deg);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <h1>ENGLISH COMPOSITION ONLINE TEST</h1>
+    <form id="loginForm">
+        <div class="input-group">
+            <input type="text" id="username" placeholder="Username" required>
+        </div>
+        <div class="input-group">
+            <input type="password" id="password" placeholder="Password" required>
+        </div>
+        <button type="submit">Login</button>
+        <p id="error"></p>
+    </form>
+</div>
+
+<script>
+    // Hardcoded user credentials
+    const users = [
+        { username: "AFRIQ", password: "12142867" },
+        { username: "MIKHAEL", password: "13142870" },
+        { username: "BADRIYYA", password: "13142875" },
+        { username: "DARWIS", password: "13143031" },
+        { username: "ISDAMIN", password: "13143033" },
+        { username: "SYAFARUDDIN", password: "13143036" },
+        { username: "IEZZARIEL", password: "13143362" },
+        { username: "ATTA", password: "13143364" },
+        { username: "SYAFIQ", password: "13143387" },
+        { username: "AIDIL", password: "13143389" },
+        { username: "RYKARL", password: "13143392" },
+        { username: "HAMIZAN", password: "13280536" },
+        { username: "NIDZAM", password: "13144397" },
+        { username: "DAMIYA", password: "13144314" },
+        { username: "NUFAIL", password: "13144320" },
+        { username: "ULYAA", password: "13144322" },
+        { username: "AULIA", password: "13144326" },
+        { username: "AZMINA", password: "13144241" },
+        { username: "FATIMAH", password: "13144344" },
+        { username: "SATIRAH", password: "13144822" },
+        { username: "NURNABILA", password: "13144824" },
+        { username: "ARIANA", password: "13144866" },
+        { username: "RASYA", password: "13144868" },
+        { username: "SHAFA", password: "13269636" },
+        { username: "SYAZWAN", password: "14497683" },
+        { username: "DANIEL", password: "14186843" },
+        { username: "DAYYAN", password: "14186847" },
+        { username: "FAEYZA", password: "14186974" },
+        { username: "FAIQA", password: "14186976" },
+        { username: "AZWAR", password: "14186987" },
+        { username: "ARSYAD", password: "14187010" },
+        { username: "HABIB", password: "14187021" },
+        { username: "SHAHIRAH", password: "14187024" },
+        { username: "AIRIEN", password: "14187055" },
+        { username: "ALIYA", password: "14187058" },
+        { username: "QASRIENA", password: "14187069" },
+        { username: "FATIYYA", password: "14187077" },
+        { username: "ISMAHANI", password: "14188127" },
+        { username: "ARNEESA", password: "14188152" },
+        { username: "QAISARA", password: "14188158" }
+    ];
+
+    // Handle login
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const username = document.getElementById('username').value.trim().toUpperCase();
+        const password = document.getElementById('password').value.trim();
+        const error = document.getElementById('error');
+        error.textContent = '';
+
+        const foundUser = users.find(user =>
+            user.username === username && user.password === password
+        );
+
+        if (foundUser) {
+            localStorage.setItem('loggedIn', 'true');
+            localStorage.setItem('username', username);
+            window.location.href = 'test.html'; // Redirect on successful login
+        } else {
+            error.textContent = 'Invalid username or password. Please try again.';
+        }
+    });
+</script>
+
+</body>
+</html>
