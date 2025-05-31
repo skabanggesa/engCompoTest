@@ -196,6 +196,22 @@
 
   let finalScore = 0;
 
+  // Disable right-click context menu
+  document.addEventListener('contextmenu', function(e) {
+    if (e.target.id === 'response') {
+      e.preventDefault();
+    }
+  });
+
+  // Prevent keyboard shortcuts for copy/paste/cut
+  document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'v' || e.key === 'x')) {
+      if (e.target.id === 'response') {
+        e.preventDefault();
+      }
+    }
+  });
+
   // Word count function
   function countWords() {
     const text = responseInput.value.trim();

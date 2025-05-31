@@ -155,7 +155,7 @@
     Based on the picture above, write a story about it. Write your answer in 70 - 80 words.
   </div>
   <div class="word-count">Word count: <span id="count">0</span>/110</div>
-  <textarea id="response" placeholder="Write your composition here..."></textarea>
+  <textarea id="response" placeholder="Write your composition here..." onpaste="return false;" oncut="return false;" oncopy="return false;"></textarea>
   <div class="button-group">
     <button id="submitBtn">Submit</button>
     <button class="btn-back" onclick="window.location.href='test.html'">Back</button>
@@ -195,6 +195,22 @@
   const submitBtn = document.getElementById("submitBtn");
 
   let finalScore = 0;
+
+  // Disable right-click context menu
+  document.addEventListener('contextmenu', function(e) {
+    if (e.target.id === 'response') {
+      e.preventDefault();
+    }
+  });
+
+  // Prevent keyboard shortcuts for copy/paste/cut
+  document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'v' || e.key === 'x')) {
+      if (e.target.id === 'response') {
+        e.preventDefault();
+      }
+    }
+  });
 
   // Word count function
   function countWords() {
@@ -331,7 +347,7 @@
     punctuationWarning.style.display = "none";
   }
 
-function sendToWhatsApp() {
+  function sendToWhatsApp() {
     // Get student's name
     const studentName = prompt("Please enter your name:", "Student Name");
     if (!studentName) return; // Cancel if no name is entered
