@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Q1 - Composition</title>
+  <title>Question 5 - Composition</title>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -145,12 +145,33 @@
       color: #e74c3c;
       font-weight: bold;
     }
+    .suggestions-container {
+      margin-top: 15px;
+      display: none;
+    }
+    .suggestions-title {
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    .suggestion-item {
+      margin-bottom: 6px;
+      padding-left: 20px;
+      position: relative;
+    }
+    .suggestion-icon {
+      position: absolute;
+      left: 0;
+      font-weight: bold;
+    }
+    .positive-feedback {
+      color: #2ecc71;
+    }
   </style>
 </head>
 <body>
 <h1>ENGLISH COMPOSITION ONLINE TEST - QUESTION 5</h1>
 <div class="exam-container">
-  <img src="https://i.postimg.cc/DzQ4NZGF/canteen.png"  alt="Canteen">
+  <img src="https://i.postimg.cc/DzQ4NZGF/canteen.png" alt="School Canteen">
   <div class="question">
     Based on the image, write a short story of 70-80 words describing what you think is happening at the canteen.
   </div>
@@ -171,15 +192,18 @@
         <div class="criteria-item"><span>Punctuation:</span><span id="punctuationResult" class="result failed"></span></div>
         <div class="criteria-item"><span>Grammar and Sentence Structure:</span><span id="grammarResult" class="result failed"></span></div>
       </div>
-      <div class="score">Total Marks: <span id="scoreDisplay">0</100</div>
+      <div class="score">Total Marks: <span id="scoreDisplay">0</span></div>
       <div class="system-comment" id="systemComment"></div>
     </div>
+  </div>
+  <div class="suggestions-container" id="suggestionsContainer">
+    <div class="suggestions-title">Suggestions for improvement:</div>
+    <div id="suggestionsList"></div>
   </div>
   <div class="warning" id="wordWarning">Try to stay within 80 words for maximum credit.</div>
   <div class="warning" id="punctuationWarning">Remember to use proper punctuation (.!?) at the end of sentences.</div>
 </div>
 
-<script src="https://languagetool.org/api/v2/check"></script>
 <script>
   // DOM Elements
   const responseInput = document.getElementById("response");
@@ -266,19 +290,28 @@
   // LanguageTool API for grammar and structure check
   function checkGrammarAndStructure(text) {
     return new Promise((resolve, reject) => {
+      if (!text.trim()) {
+        resolve({matches: []});
+        return;
+      }
+      
       const xhr = new XMLHttpRequest();
       xhr.open('POST', 'https://languagetool.org/api/v2/check', true);
       xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
       xhr.onreadystatechange = function () {
         if (xhr.readyState === 4 && xhr.status === 200) {
-          const response = JSON.parse(xhr.responseText);
-          resolve(response);
+          try {
+            const response = JSON.parse(xhr.responseText);
+            resolve(response);
+          } catch (e) {
+            resolve({matches: []});
+          }
         } else if (xhr.readyState === 4) {
-          reject(new Error('Grammar and Sentence Structure check failed'));
+          resolve({matches: []});
         }
       };
       xhr.onerror = function () {
-        reject(new Error('Network error'));
+        resolve({matches: []});
       };
       xhr.send(`language=en-US&text=${encodeURIComponent(text)}`);
     });
@@ -322,12 +355,15 @@
     const fullStopCount = countFullStops(userText);
     let punctuationScore = 0;
     
-    if (fullStopCount > 4) {
+    if (fullStopCount >= 4) {
       punctuationScore = 15;
       punctuationResult.textContent = "Excellent punctuation (15/15)";
-    } else if (fullStopCount >= 2 && fullStopCount <= 3) {
-      punctuationScore = 10;
-      punctuationResult.textContent = "Adequate punctuation (10/15)";
+    } else if (fullStopCount === 3) {
+      punctuationScore = 12;
+      punctuationResult.textContent = "Good punctuation (12/15)";
+    } else if (fullStopCount === 2) {
+      punctuationScore = 8;
+      punctuationResult.textContent = "Adequate punctuation (8/15)";
     } else if (fullStopCount === 1) {
       punctuationScore = 5;
       punctuationResult.textContent = "Minimal punctuation (5/15)";
@@ -336,28 +372,27 @@
       punctuationResult.textContent = "No proper punctuation (0/15)";
     }
     
-    punctuationResult.className = punctuationScore >= 9 ? "result passed" : "result failed";
+    punctuationResult.className = punctuationScore >= 8 ? "result passed" : "result failed";
     punctuationWarning.style.display = fullStopCount < 4 ? "block" : "none";
     score += punctuationScore;
 
     // Grammar and Structure check (70 points)
     let grammarScore = 70; // Default full marks
     
-    // Always perform grammar check, but apply penalties for very short answers
     try {
       grammarResponse = await checkGrammarAndStructure(userText);
       const errors = grammarResponse.matches.length;
       
       // Apply penalties based on word count and full stops
-      if (wordCount < 30 || fullStopCount < 4) {
-        if (wordCount < 1 || fullStopCount < 1) {
+      if (wordCount < 30 || fullStopCount < 1) {
+        if (wordCount < 1) {
           grammarScore = 0;
-        } else if (wordCount < 10 || fullStopCount < 2) {
+        } else if (wordCount < 10) {
           grammarScore = 20;
-        } else if (wordCount < 20 || fullStopCount < 3) {
-          grammarScore = 25;
-        } else {
+        } else if (wordCount < 20) {
           grammarScore = 30;
+        } else {
+          grammarScore = 40;
         }
         grammarResult.textContent = `Grammar and Sentence Structure (penalty applied): ${grammarScore}/70`;
       } else {
@@ -366,15 +401,15 @@
         grammarResult.textContent = `Grammar and Sentence Structure: ${grammarScore}/70`;
       }
     } catch (error) {
-      grammarResult.textContent = "Grammar and Sentence Structure check failed";
-      grammarScore = 0;
+      grammarResult.textContent = "Grammar and Sentence Structure: 50/70 (check failed)";
+      grammarScore = 50;
     }
     
     grammarResult.className = grammarScore >= 42 ? "result passed" : "result failed";
     score += grammarScore;
 
     finalScore = score;
-    scoreDisplay.textContent = `${score}/100`;
+    scoreDisplay.textContent = `${score}`;
 
     // Feedback message
     if (score >= 90) {
@@ -399,7 +434,7 @@
 
     // Word count suggestions
     if (wordCount < 70) {
-      addSuggestion("Your story is too short. Try adding more details about the characters, setting, or action.");
+      addSuggestion("Your story is too short. Try adding more details about the canteen scene and activities.");
     } else if (wordCount > 80) {
       addSuggestion("Your story is slightly long. Consider removing unnecessary details or combining sentences.");
     }
@@ -444,17 +479,17 @@
     }
 
     // Content-based suggestions
-    if (!text.toLowerCase().includes('canteen') && !text.toLowerCase().includes('program')) {
-      addSuggestion("Your story should mention the canteen shown in the picture to stay relevant.");
+    if (!text.toLowerCase().includes('canteen') && !text.toLowerCase().includes('food') && !text.toLowerCase().includes('students')) {
+      addSuggestion("Your story should mention the canteen setting and activities shown in the picture to stay relevant.");
     }
 
     if (fullStopCount < 3) {
-      addSuggestion("Try varying your sentence structure. Use a mix of short and long sentences.");
+      addSuggestion("Try varying your sentence structure. Use a mix of short and long sentences to describe the canteen scene.");
     }
 
     // Positive reinforcement if no major issues
     if (suggestionsList.children.length === 0) {
-      addSuggestion("Great job! Your story meets all the basic requirements. To improve further, try adding more descriptive language.", true);
+      addSuggestion("Great job! Your story meets all the basic requirements. To improve further, try adding more descriptive language about the canteen scene.", true);
     }
 
     // Show suggestions container if there are suggestions
@@ -515,7 +550,7 @@
       message + studentInfo + questionInfo + answerContent + scoreMsg + wc + comment + suggestionsMsg
     );
     
-    window.open(`https://wa.me/60106607787?text=${fullMessage}`, '_blank');
+    window.open(`https://wa.me/?text=${fullMessage}`, '_blank');
   }
 
   function confirmLogout() {
