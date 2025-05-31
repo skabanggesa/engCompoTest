@@ -145,6 +145,27 @@
       color: #e74c3c;
       font-weight: bold;
     }
+    .suggestions-container {
+      margin-top: 15px;
+      display: none;
+    }
+    .suggestions-list {
+      list-style-type: none;
+      padding: 0;
+    }
+    .suggestion-item {
+      margin-bottom: 8px;
+      padding: 8px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+    }
+    .suggestion-icon {
+      margin-right: 8px;
+      font-weight: bold;
+    }
+    .positive-feedback {
+      color: #2ecc71;
+    }
   </style>
 </head>
 <body>
@@ -175,11 +196,16 @@
       <div class="system-comment" id="systemComment"></div>
     </div>
   </div>
+  <div class="suggestions-container" id="suggestionsContainer">
+    <div class="feedback">
+      <strong>Suggestions for improvement:</strong>
+      <div class="suggestions-list" id="suggestionsList"></div>
+    </div>
+  </div>
   <div class="warning" id="wordWarning">Try to stay within 80 words for maximum credit.</div>
   <div class="warning" id="punctuationWarning">Remember to use proper punctuation (.!?) at the end of sentences.</div>
 </div>
 
-<script src="https://languagetool.org/api/v2/check"></script>
 <script>
   // DOM Elements
   const responseInput = document.getElementById("response");
@@ -266,21 +292,33 @@
   // LanguageTool API for grammar and structure check
   function checkGrammarAndStructure(text) {
     return new Promise((resolve, reject) => {
+      if (!text.trim()) {
+        reject(new Error('Empty text'));
+        return;
+      }
+
       const xhr = new XMLHttpRequest();
       xhr.open('POST', 'https://languagetool.org/api/v2/check', true);
       xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
       xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-          const response = JSON.parse(xhr.responseText);
-          resolve(response);
-        } else if (xhr.readyState === 4) {
-          reject(new Error('Grammar and Sentence Structure check failed'));
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200) {
+            try {
+              const response = JSON.parse(xhr.responseText);
+              resolve(response);
+            } catch (e) {
+              reject(new Error('Failed to parse response'));
+            }
+          } else {
+            reject(new Error('Grammar check failed with status: ' + xhr.status));
+          }
         }
       };
       xhr.onerror = function () {
         reject(new Error('Network error'));
       };
-      xhr.send(`language=en-US&text=${encodeURIComponent(text)}`);
+      const params = `language=en-US&text=${encodeURIComponent(text)}`;
+      xhr.send(params);
     });
   }
 
@@ -343,10 +381,9 @@
     // Grammar and Structure check (70 points)
     let grammarScore = 70; // Default full marks
     
-    // Always perform grammar check, but apply penalties for very short answers
     try {
       grammarResponse = await checkGrammarAndStructure(userText);
-      const errors = grammarResponse.matches.length;
+      const errors = grammarResponse.matches ? grammarResponse.matches.length : 0;
       
       // Apply penalties based on word count and full stops
       if (wordCount < 30 || fullStopCount < 4) {
@@ -366,7 +403,8 @@
         grammarResult.textContent = `Grammar and Sentence Structure: ${grammarScore}/70`;
       }
     } catch (error) {
-      grammarResult.textContent = "Grammar and Sentence Structure check failed";
+      console.error("Grammar check error:", error);
+      grammarResult.textContent = "Grammar check service unavailable";
       grammarScore = 0;
     }
     
@@ -515,7 +553,7 @@
       message + studentInfo + questionInfo + answerContent + scoreMsg + wc + comment + suggestionsMsg
     );
     
-    window.open(`https://wa.me/60106607787?text=${fullMessage}`, '_blank');
+    window.open(`https://wa.me/?text=${fullMessage}`, '_blank');
   }
 
   function confirmLogout() {
