@@ -193,23 +193,37 @@
   const wordWarning = document.getElementById("wordWarning");
   const punctuationWarning = document.getElementById("punctuationWarning");
   const submitBtn = document.getElementById("submitBtn");
+  const suggestionsContainer = document.getElementById("suggestionsContainer");
+  const suggestionsList = document.getElementById("suggestionsList");
 
   let finalScore = 0;
+  let grammarResponse = null;
 
-  // Disable right-click context menu
+  // Disable copy-paste functionality
   document.addEventListener('contextmenu', function(e) {
     if (e.target.id === 'response') {
       e.preventDefault();
     }
   });
 
-  // Prevent keyboard shortcuts for copy/paste/cut
   document.addEventListener('keydown', function(e) {
     if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'v' || e.key === 'x')) {
       if (e.target.id === 'response') {
         e.preventDefault();
       }
     }
+  });
+
+  responseInput.addEventListener('paste', function(e) {
+    e.preventDefault();
+  });
+
+  responseInput.addEventListener('cut', function(e) {
+    e.preventDefault();
+  });
+
+  responseInput.addEventListener('copy', function(e) {
+    e.preventDefault();
   });
 
   // Word count function
@@ -242,6 +256,11 @@
       }
     }
     return endsWithPunctuation && allCapitalized;
+  }
+
+  // Count full stops
+  function countFullStops(text) {
+    return (text.match(/[.!?]/g) || []).length;
   }
 
   // LanguageTool API for grammar and structure check
@@ -300,30 +319,62 @@
     score += wordScore;
 
     // Punctuation check (15 points)
-    const punctuationValid = checkPunctuation(userText);
-    let punctuationScore = punctuationValid ? 15 : 5;
-    punctuationResult.textContent = punctuationValid ? "Excellent punctuation (15/15)" : "Some punctuation issues (5/15)";
+    const fullStopCount = countFullStops(userText);
+    let punctuationScore = 0;
+    
+    if (fullStopCount > 4) {
+      punctuationScore = 15;
+      punctuationResult.textContent = "Excellent punctuation (15/15)";
+    } else if (fullStopCount >= 2 && fullStopCount <= 3) {
+      punctuationScore = 10;
+      punctuationResult.textContent = "Adequate punctuation (10/15)";
+    } else if (fullStopCount === 1) {
+      punctuationScore = 5;
+      punctuationResult.textContent = "Minimal punctuation (5/15)";
+    } else {
+      punctuationScore = 0;
+      punctuationResult.textContent = "No proper punctuation (0/15)";
+    }
+    
     punctuationResult.className = punctuationScore >= 9 ? "result passed" : "result failed";
-    punctuationWarning.style.display = punctuationValid ? "none" : "block";
+    punctuationWarning.style.display = fullStopCount < 4 ? "block" : "none";
     score += punctuationScore;
 
     // Grammar and Structure check (70 points)
+    let grammarScore = 70; // Default full marks
+    
+    // Always perform grammar check, but apply penalties for very short answers
     try {
-      const response = await checkGrammarAndStructure(userText);
-      const errors = response.matches.length;
-      const totalScore = 70;
-      const grammarScore = Math.max(0, totalScore - (errors * 2));
-      grammarResult.textContent = `Grammar and Sentence Structure: ${grammarScore}/70`;
-      grammarResult.className = grammarScore >= 42 ? "result passed" : "result failed";
-      score += grammarScore;
+      grammarResponse = await checkGrammarAndStructure(userText);
+      const errors = grammarResponse.matches.length;
+      
+      // Apply penalties based on word count and full stops
+      if (wordCount < 30 || fullStopCount < 4) {
+        if (wordCount < 1 || fullStopCount < 1) {
+          grammarScore = 0;
+        } else if (wordCount < 10 || fullStopCount < 2) {
+          grammarScore = 20;
+        } else if (wordCount < 20 || fullStopCount < 3) {
+          grammarScore = 25;
+        } else {
+          grammarScore = 30;
+        }
+        grammarResult.textContent = `Grammar and Sentence Structure (penalty applied): ${grammarScore}/70`;
+      } else {
+        // Normal grammar scoring with error deductions
+        grammarScore = Math.max(0, grammarScore - (errors * 2));
+        grammarResult.textContent = `Grammar and Sentence Structure: ${grammarScore}/70`;
+      }
     } catch (error) {
       grammarResult.textContent = "Grammar and Sentence Structure check failed";
-      grammarResult.className = "result failed";
-      score += 0; // No score for grammar and structure if check fails
+      grammarScore = 0;
     }
+    
+    grammarResult.className = grammarScore >= 42 ? "result passed" : "result failed";
+    score += grammarScore;
 
     finalScore = score;
-    scoreDisplay.textContent = `${score}/100`; // Display only the score out of 100
+    scoreDisplay.textContent = `${score}/100`;
 
     // Feedback message
     if (score >= 90) {
@@ -336,7 +387,89 @@
       systemComment.textContent = "Needs improvement. Work on all aspects: word count, punctuation, grammar, and structure.";
     }
 
+    // Generate suggestions
+    generateSuggestions(userText, wordCount, fullStopCount, grammarResponse?.matches || []);
+
     resultContainer.style.display = "block";
+  }
+
+  // Generate personalized suggestions
+  function generateSuggestions(text, wordCount, fullStopCount, grammarErrors) {
+    suggestionsList.innerHTML = '';
+
+    // Word count suggestions
+    if (wordCount < 70) {
+      addSuggestion("Your story is too short. Try adding more details about the characters, setting, or action.");
+    } else if (wordCount > 80) {
+      addSuggestion("Your story is slightly long. Consider removing unnecessary details or combining sentences.");
+    }
+
+    // Punctuation suggestions
+    if (fullStopCount < 4) {
+      addSuggestion("Your story needs more sentences. Aim for at least 4-5 properly punctuated sentences.");
+      
+      const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+      for (let i = 0; i < sentences.length; i++) {
+        const trimmed = sentences[i].trim();
+        if (trimmed.length > 0 && trimmed[0] !== trimmed[0].toUpperCase()) {
+          addSuggestion("Remember to capitalize the first letter of each sentence.");
+          break;
+        }
+      }
+    }
+
+    // Grammar suggestions
+    if (grammarErrors.length > 0) {
+      const commonErrors = {};
+      
+      grammarErrors.forEach(error => {
+        const ruleId = error.rule.id;
+        if (!commonErrors[ruleId]) {
+          commonErrors[ruleId] = {
+            count: 0,
+            message: error.message,
+            examples: []
+          };
+        }
+        commonErrors[ruleId].count++;
+        commonErrors[ruleId].examples.push(error.context.text.substring(error.context.offset, error.context.offset + error.context.length));
+      });
+
+      Object.entries(commonErrors)
+        .sort((a, b) => b[1].count - a[1].count)
+        .slice(0, 3)
+        .forEach(([ruleId, error]) => {
+          addSuggestion(`${error.message}. Example: "${error.examples[0]}"`);
+        });
+    }
+
+    // Content-based suggestions
+    if (!text.toLowerCase().includes('bully') && !text.toLowerCase().includes('program')) {
+      addSuggestion("Your story should mention the bully incident shown in the picture to stay relevant.");
+    }
+
+    if (fullStopCount < 3) {
+      addSuggestion("Try varying your sentence structure. Use a mix of short and long sentences.");
+    }
+
+    // Positive reinforcement if no major issues
+    if (suggestionsList.children.length === 0) {
+      addSuggestion("Great job! Your story meets all the basic requirements. To improve further, try adding more descriptive language.", true);
+    }
+
+    // Show suggestions container if there are suggestions
+    suggestionsContainer.style.display = suggestionsList.children.length > 0 ? 'block' : 'none';
+  }
+
+  // Helper function to add a suggestion
+  function addSuggestion(text, isPositive = false) {
+    const suggestion = document.createElement('div');
+    suggestion.className = 'suggestion-item';
+    suggestion.innerHTML = `
+      <span class="suggestion-icon">${isPositive ? '✓' : '•'}</span>
+      <span class="${isPositive ? 'positive-feedback' : ''}">${text}</span>
+    `;
+    suggestionsList.appendChild(suggestion);
   }
 
   function tryAgain() {
@@ -345,18 +478,19 @@
     wordCountSpan.textContent = "0";
     wordWarning.style.display = "none";
     punctuationWarning.style.display = "none";
+    suggestionsList.innerHTML = '';
+    suggestionsContainer.style.display = 'none';
+    grammarResponse = null;
   }
 
-function sendToWhatsApp() {
-    // Get student's name
+  function sendToWhatsApp() {
     const studentName = prompt("Please enter your name:", "Student Name");
-    if (!studentName) return; // Cancel if no name is entered
+    if (!studentName) return;
     
-    // Extract question number from header
     const header = document.querySelector('h1').textContent;
     const questionNumber = header.includes('QUESTION') ? 
       header.split('QUESTION')[1].trim() : 
-      "Question 1"; // Fallback
+      "Question 1";
     
     const userAnswer = responseInput.value.trim();
     
@@ -368,8 +502,17 @@ function sendToWhatsApp() {
     const wc = `🔢 Word Count: ${wordCountSpan.textContent}\n`;
     const comment = `💬 Feedback: ${systemComment.textContent}`;
     
+    // Include suggestions in WhatsApp message
+    let suggestionsMsg = '';
+    if (suggestionsList.children.length > 0) {
+      suggestionsMsg = `\n📌 Suggestions:\n`;
+      Array.from(suggestionsList.children).forEach(item => {
+        suggestionsMsg += `• ${item.textContent.replace('•', '').trim()}\n`;
+      });
+    }
+    
     const fullMessage = encodeURIComponent(
-      message + studentInfo + questionInfo + answerContent + scoreMsg + wc + comment
+      message + studentInfo + questionInfo + answerContent + scoreMsg + wc + comment + suggestionsMsg
     );
     
     window.open(`https://wa.me/60106607787?text=${fullMessage}`, '_blank');
