@@ -331,12 +331,31 @@
     punctuationWarning.style.display = "none";
   }
 
-  function sendToWhatsApp() {
+function sendToWhatsApp() {
+    // Get student's name
+    const studentName = prompt("Please enter your name:", "Student Name");
+    if (!studentName) return; // Cancel if no name is entered
+    
+    // Extract question number from header
+    const header = document.querySelector('h1').textContent;
+    const questionNumber = header.includes('QUESTION') ? 
+      header.split('QUESTION')[1].trim() : 
+      "Question 1"; // Fallback
+    
+    const userAnswer = responseInput.value.trim();
+    
     const message = `📝 English Composition Result\n`;
+    const studentInfo = `👤 Student: ${studentName}\n`;
+    const questionInfo = `❓ Question ${questionNumber}\n`;
+    const answerContent = `📄 Answer:\n${userAnswer}\n\n`;
     const scoreMsg = `🎯 Total Marks: ${finalScore}/100\n`;
     const wc = `🔢 Word Count: ${wordCountSpan.textContent}\n`;
     const comment = `💬 Feedback: ${systemComment.textContent}`;
-    const fullMessage = encodeURIComponent(message + scoreMsg + wc + comment);
+    
+    const fullMessage = encodeURIComponent(
+      message + studentInfo + questionInfo + answerContent + scoreMsg + wc + comment
+    );
+    
     window.open(`https://wa.me/60106607787?text=${fullMessage}`, '_blank');
   }
 
