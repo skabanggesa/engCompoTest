@@ -166,6 +166,25 @@
     .positive-feedback {
       color: #2ecc71;
     }
+    .grade-display {
+      font-weight: bold;
+      margin-top: 5px;
+    }
+    .grade-A {
+      color: #27ae60;
+    }
+    .grade-B {
+      color: #2ecc71;
+    }
+    .grade-C {
+      color: #f39c12;
+    }
+    .grade-D {
+      color: #e67e22;
+    }
+    .grade-E {
+      color: #e74c3c;
+    }
   </style>
 </head>
 <body>
@@ -193,6 +212,7 @@
         <div class="criteria-item"><span>Grammar and Sentence Structure:</span><span id="grammarResult" class="result failed"></span></div>
       </div>
       <div class="score">Total Marks: <span id="scoreDisplay">0</100</div>
+      <div id="gradeDisplay" class="grade-display"></div>
       <div class="system-comment" id="systemComment"></div>
     </div>
   </div>
@@ -215,6 +235,7 @@
   const punctuationResult = document.getElementById("punctuationResult");
   const grammarResult = document.getElementById("grammarResult");
   const scoreDisplay = document.getElementById("scoreDisplay");
+  const gradeDisplay = document.getElementById("gradeDisplay");
   const systemComment = document.getElementById("systemComment");
   const wordWarning = document.getElementById("wordWarning");
   const punctuationWarning = document.getElementById("punctuationWarning");
@@ -224,6 +245,8 @@
 
   let finalScore = 0;
   let grammarResponse = null;
+  let grade = "";
+  let gradeText = "";
 
   // Disable copy-paste functionality
   document.addEventListener('contextmenu', function(e) {
@@ -411,18 +434,41 @@
     grammarResult.className = grammarScore >= 42 ? "result passed" : "result failed";
     score += grammarScore;
 
-    finalScore = score;
-    scoreDisplay.textContent = `${score}/100`;
+    // Subtract 15 from the total score (instead of dividing by 2)
+    finalScore = Math.max(0, score - 15); // Ensure score doesn't go below 0
+    scoreDisplay.textContent = `${finalScore}/100`;
+
+    // Determine grade based on finalScore (after subtracting 15)
+    if (finalScore >= 80) {
+        grade = "A";
+        gradeText = "Excellent";
+    } else if (finalScore >= 60) {
+        grade = "B";
+        gradeText = "Good";
+    } else if (finalScore >= 40) {
+        grade = "C";
+        gradeText = "Satisfactory";
+    } else if (finalScore >= 20) {
+        grade = "D";
+        gradeText = "Weak";
+    } else {
+        grade = "E";
+        gradeText = "Failed";
+    }
+
+    // Display grade with appropriate color
+    gradeDisplay.textContent = `Grade: ${grade} (${gradeText})`;
+    gradeDisplay.className = `grade-display grade-${grade}`;
 
     // Feedback message
     if (score >= 90) {
-      systemComment.textContent = "Excellent work! Your writing is excellent across all criteria.";
+        systemComment.textContent = `Excellent work! Your writing is excellent across all criteria.`;
     } else if (score >= 75) {
-      systemComment.textContent = "Good job! Some minor improvements can make it outstanding.";
+        systemComment.textContent = `Good job! Some minor improvements can make it outstanding.`;
     } else if (score >= 50) {
-      systemComment.textContent = "Fair attempt. Focus more on grammar and sentence structure.";
+        systemComment.textContent = `Fair attempt. Focus more on grammar and sentence structure.`;
     } else {
-      systemComment.textContent = "Needs improvement. Work on all aspects: word count, punctuation, grammar, and structure.";
+        systemComment.textContent = `Needs improvement. Work on all aspects: word count, punctuation, grammar, and structure.`;
     }
 
     // Generate suggestions
@@ -519,6 +565,8 @@
     suggestionsList.innerHTML = '';
     suggestionsContainer.style.display = 'none';
     grammarResponse = null;
+    gradeDisplay.textContent = "";
+    gradeDisplay.className = "grade-display";
   }
 
   function sendToWhatsApp() {
@@ -537,6 +585,7 @@
     const questionInfo = `❓ Question ${questionNumber}\n`;
     const answerContent = `📄 Answer:\n${userAnswer}\n\n`;
     const scoreMsg = `🎯 Total Marks: ${finalScore}/100\n`;
+    const gradeMsg = `📊 Grade: ${grade} (${gradeText})\n`;
     const wc = `🔢 Word Count: ${wordCountSpan.textContent}\n`;
     const comment = `💬 Feedback: ${systemComment.textContent}`;
     
@@ -550,7 +599,7 @@
     }
     
     const fullMessage = encodeURIComponent(
-      message + studentInfo + questionInfo + answerContent + scoreMsg + wc + comment + suggestionsMsg
+      message + studentInfo + questionInfo + answerContent + scoreMsg + gradeMsg + wc + comment + suggestionsMsg
     );
     
     window.open(`https://wa.me/?text=${fullMessage}`, '_blank');
