@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ENGLISH COMPOSITION ONLINE TEST</title>
+    <title>English Composition Online Test</title>
     <style>
         * {
             box-sizing: border-box;
@@ -23,13 +23,10 @@
             padding: 40px;
             border-radius: 12px;
             width: 320px;
-            box-shadow:
-                0 30px 40px rgba(0, 0, 0, 0.3),
-                inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+            box-shadow: 0 30px 40px rgba(0, 0, 0, 0.3),
+                        inset 0 0 0 1px rgba(255, 255, 255, 0.1);
             transform-style: preserve-3d;
             animation: floatBox 6s ease-in-out infinite;
-            position: relative;
-            transition: transform 0.3s ease;
             text-align: center;
         }
         .login-container:hover {
@@ -43,6 +40,7 @@
         }
         .input-group {
             margin-bottom: 20px;
+            text-align: left;
         }
         .input-group input {
             width: 100%;
@@ -90,9 +88,9 @@
 
 <div class="login-container">
     <h1>ENGLISH COMPOSITION ONLINE TEST</h1>
-    <form id="loginForm">
+    <form id="loginForm" autocomplete="off">
         <div class="input-group">
-            <input type="text" id="username" placeholder="Username" required>
+            <input type="text" id="username" placeholder="Username" required autofocus>
         </div>
         <div class="input-group">
             <input type="password" id="password" placeholder="Password" required>
@@ -103,7 +101,6 @@
 </div>
 
 <script>
-    // Hardcoded user credentials
     const users = [
         { username: "AFRIQ", password: "12142867" },
         { username: "MIKHAEL", password: "13142870" },
@@ -156,8 +153,7 @@
         { username: "ALISA", password: "13642894" }
     ];
 
-    // Handle login
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
         e.preventDefault();
 
         const username = document.getElementById('username').value.trim().toUpperCase();
@@ -172,7 +168,7 @@
         if (foundUser) {
             localStorage.setItem('loggedIn', 'true');
             localStorage.setItem('username', username);
-            window.location.href = 'test.html'; // Redirect on successful login
+            window.location.href = 'test.html';
         } else {
             error.textContent = 'Invalid username or password. Please try again.';
         }
